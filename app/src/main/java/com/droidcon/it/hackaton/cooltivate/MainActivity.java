@@ -10,6 +10,7 @@ import android.widget.Toast;
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.util.ArrayList;
@@ -33,44 +34,45 @@ import rx.schedulers.Schedulers;
 @EActivity(R.layout.activity_main)
 public class MainActivity extends Activity {
 
-//    @ViewById
-//    WebView webView;
-    @ViewById
-    TextView temperature;
-    @ViewById
-    TextView humidity;
-    @ViewById
-    TextView lux;
-    private TransmitterDevice mDevice;
-    private Subscription mUserInfoSubscription;
-    private Subscription mTemperatureDeviceSubscription;
-
     @AfterViews
-    public void loadWebView() {
-//        temperature.setText("+25° C");
-//        humidity.setText("70%");
-//        lux.setText("100 nit");
-//
-//        webView.loadUrl("http://192.168.43.1:8080/browserfs.html");
-//        webView.setInitialScale(100);
-//        webView.setBackgroundColor(Color.BLACK);
-//        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-//        webView.setVerticalScrollbarOverlay(false);
-    }
-
-    @AfterInject
     void onCreate() {
         RelayrSdkInitializer.initSdk(this);
         if (RelayrSdk.isUserLoggedIn()) {
-            updateUiForALoggedInUser();
+            loadUserInfo();
         } else {
-//            updateUiForANonLoggedInUser();
             logIn();
         }
     }
 
-    private void updateUiForALoggedInUser() {
-        loadUserInfo();
+
+    private void logIn() {
+        RelayrSdk.logIn(this)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<User>() {
+                    @Override
+                    public void onCompleted() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(MainActivity.this,
+                                R.string.unsuccessfully_logged_in, Toast.LENGTH_SHORT).show();
+                    }
+
+
+                    @Override
+                    public void onNext(User user) {
+                        startListeningAndInteract(user);
+                    }
+                });
+    }
+
+    private void startListeningAndInteract(User user) {
+        Toast.makeText(MainActivity.this,
+                R.string.successfully_logged_in, Toast.LENGTH_SHORT).show();
+
+        loadWebView();
+        loadDevices(mUser);
     }
 
     private void loadUserInfo() {
@@ -81,46 +83,43 @@ public class MainActivity extends Activity {
                 .subscribe(new Subscriber<User>() {
                     @Override
                     public void onCompleted() {
-
                     }
 
                     @Override
                     public void onError(Throwable e) {
-
                     }
 
                     @Override
                     public void onNext(User user) {
-                        loadDevices(user);
+                        startListeningAndInteract(user);
                     }
                 });
     }
 
-    private void logIn() {
-        RelayrSdk.logIn(this)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<User>() {
-                    @Override
-                    public void onCompleted() {
 
-                    }
+    @ViewById
+    WebView webView;
+    @ViewById
+    TextView temperature;
+    @ViewById
+    TextView humidity;
+    @ViewById
+    TextView lux;
 
-                    @Override
-                    public void onError(Throwable e) {
-                        Toast.makeText(MainActivity.this,
-                                R.string.unsuccessfully_logged_in, Toast.LENGTH_SHORT).show();
-                    }
+    TransmitterDevice mDevice;
+    Subscription mUserInfoSubscription;
+    Subscription mTemperatureDeviceSubscription;
+    Subscription mLightDeviceSubscription;
+    User mUser;
 
-
-                    @Override
-                    public void onNext(User user) {
-                        Toast.makeText(MainActivity.this,
-                                R.string.unsuccessfully_logged_in, Toast.LENGTH_SHORT).show();
-                                loadDevices(user);
-
-                    }
-                });
+    public void loadWebView() {
+        webView.loadUrl("http://192.168.43.1:8080/browserfs.html");
+        webView.setInitialScale(100);
+        webView.setBackgroundColor(Color.BLACK);
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        webView.setVerticalScrollbarOverlay(false);
     }
+
 
     private void loadDevices(User user) {
         RelayrSdk.getRelayrApi()
@@ -154,8 +153,7 @@ public class MainActivity extends Activity {
                         for (TransmitterDevice device : devices) {
                             if (device.model.equals(DeviceModel.TEMPERATURE_HUMIDITY.getId())) {
                                 subscribeForTemperatureUpdates(device);
-                            } else
-                            if (device.model.equals(DeviceModel.LIGHT_PROX_COLOR.getId())){
+                            } else if (device.model.equals(DeviceModel.LIGHT_PROX_COLOR.getId())) {
                                 subscribeForLightUpdates(device);
                             }
                         }
@@ -165,7 +163,7 @@ public class MainActivity extends Activity {
 
     private void subscribeForTemperatureUpdates(TransmitterDevice device) {
         mDevice = device;
-        RelayrSdk.getWebSocketClient().subscribe(mDevice)
+        mTemperatureDeviceSubscription = RelayrSdk.getWebSocketClient().subscribe(mDevice)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<Reading>() {
 
@@ -181,6 +179,7 @@ public class MainActivity extends Activity {
                     }
 
                     @Override
+                    @UiThread
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("temperature")) {
                             temperature.setText(reading.value + "˚ C");
@@ -192,18 +191,14 @@ public class MainActivity extends Activity {
     }
 
 
-
-
-
     private void subscribeForLightUpdates(TransmitterDevice device) {
         mDevice = device;
-        RelayrSdk.getWebSocketClient().subscribe(mDevice)
+        mLightDeviceSubscription = RelayrSdk.getWebSocketClient().subscribe(mDevice)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<Reading>() {
 
                     @Override
                     public void onCompleted() {
-
                     }
 
                     @Override
@@ -213,6 +208,7 @@ public class MainActivity extends Activity {
                     }
 
                     @Override
+                    @UiThread
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("luminosity")) {
                             lux.setText(reading.value + "cd");
@@ -221,4 +217,35 @@ public class MainActivity extends Activity {
                 });
     }
 
+    private void unSubscribeToUpdates() {
+        if (isSubscribed(mUserInfoSubscription)) {
+            mUserInfoSubscription.unsubscribe();
+        }
+        if (isSubscribed(mTemperatureDeviceSubscription)) {
+            mTemperatureDeviceSubscription.unsubscribe();
+        }
+        if (isSubscribed(mLightDeviceSubscription)) {
+            mLightDeviceSubscription.unsubscribe();
+        }
+//        if (isSubscribed(mWebSocketSubscription)) {
+//            mWebSocketSubscription.unsubscribe();
+//            RelayrSdk.getWebSocketClient().unSubscribe(mDevice.id);
+//        }
+    }
+
+    private static boolean isSubscribed(Subscription subscription) {
+        return subscription != null && !subscription.isUnsubscribed();
+    }
+
+    @Override
+    protected void onPause() {
+        logOut();
+        super.onPause();
+    }
+
+    private void logOut() {
+        unSubscribeToUpdates();
+        RelayrSdk.logOut();
+        Toast.makeText(this, R.string.successfully_logged_out, Toast.LENGTH_SHORT).show();
+    }
 }
