@@ -7,7 +7,6 @@ import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
@@ -72,7 +71,7 @@ public class MainActivity extends Activity {
                 R.string.successfully_logged_in, Toast.LENGTH_SHORT).show();
 
         loadWebView();
-        loadDevices(mUser);
+        loadDevices(user);
     }
 
     private void loadUserInfo() {
@@ -107,10 +106,9 @@ public class MainActivity extends Activity {
     TextView lux;
 
     TransmitterDevice mDevice;
-    Subscription mUserInfoSubscription;
+//    Subscription mUserInfoSubscription;
     Subscription mTemperatureDeviceSubscription;
     Subscription mLightDeviceSubscription;
-    User mUser;
 
     public void loadWebView() {
         webView.loadUrl("http://192.168.43.1:8080/browserfs.html");
@@ -217,35 +215,35 @@ public class MainActivity extends Activity {
                 });
     }
 
-    private void unSubscribeToUpdates() {
-        if (isSubscribed(mUserInfoSubscription)) {
-            mUserInfoSubscription.unsubscribe();
-        }
-        if (isSubscribed(mTemperatureDeviceSubscription)) {
-            mTemperatureDeviceSubscription.unsubscribe();
-        }
-        if (isSubscribed(mLightDeviceSubscription)) {
-            mLightDeviceSubscription.unsubscribe();
-        }
-//        if (isSubscribed(mWebSocketSubscription)) {
-//            mWebSocketSubscription.unsubscribe();
-//            RelayrSdk.getWebSocketClient().unSubscribe(mDevice.id);
+//    private void unSubscribeToUpdates() {
+//        if (isSubscribed(mUserInfoSubscription)) {
+//            mUserInfoSubscription.unsubscribe();
 //        }
-    }
+//        if (isSubscribed(mTemperatureDeviceSubscription)) {
+//            mTemperatureDeviceSubscription.unsubscribe();
+//        }
+//        if (isSubscribed(mLightDeviceSubscription)) {
+//            mLightDeviceSubscription.unsubscribe();
+//        }
+////        if (isSubscribed(mWebSocketSubscription)) {
+////            mWebSocketSubscription.unsubscribe();
+////            RelayrSdk.getWebSocketClient().unSubscribe(mDevice.id);
+////        }
+//    }
+//
+//    private static boolean isSubscribed(Subscription subscription) {
+//        return subscription != null && !subscription.isUnsubscribed();
+//    }
+//
+//    @Override
+//    protected void onPause() {
+//        logOut();
+//        super.onPause();
+//    }
 
-    private static boolean isSubscribed(Subscription subscription) {
-        return subscription != null && !subscription.isUnsubscribed();
-    }
-
-    @Override
-    protected void onPause() {
-        logOut();
-        super.onPause();
-    }
-
-    private void logOut() {
-        unSubscribeToUpdates();
-        RelayrSdk.logOut();
-        Toast.makeText(this, R.string.successfully_logged_out, Toast.LENGTH_SHORT).show();
-    }
+//    private void logOut() {
+//        unSubscribeToUpdates();
+//        RelayrSdk.logOut();
+//        Toast.makeText(this, R.string.successfully_logged_out, Toast.LENGTH_SHORT).show();
+//    }
 }
