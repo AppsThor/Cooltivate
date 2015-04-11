@@ -8,4 +8,6 @@
     <string name="successfully_logged_in">You were successfully logged in!</string>
     <string name="successfully_logged_out">You were successfully logged out!</string>
     <string name="unsuccessfully_logged_in">There was a problem in the log in.</string>
+    <string name="something_went_wrong">Something went wrong.</string>
+
 </resources>

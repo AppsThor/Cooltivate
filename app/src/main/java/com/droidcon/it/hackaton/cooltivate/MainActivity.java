@@ -1,7 +1,6 @@
 package com.droidcon.it.hackaton.cooltivate;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Color;
 import android.view.View;
 import android.webkit.WebView;
@@ -11,6 +10,7 @@ import android.widget.Toast;
 import org.androidannotations.annotations.AfterInject;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.util.ArrayList;
@@ -34,9 +34,7 @@ import rx.schedulers.Schedulers;
 @EActivity(R.layout.activity_main)
 public class MainActivity extends Activity {
 
-    public static final String USER = "com.droidcon.it.hackaton.cooltivate.user";
-
-    @AfterInject
+    @AfterViews
     void onCreate() {
         RelayrSdkInitializer.initSdk(this);
         if (RelayrSdk.isUserLoggedIn()) {
@@ -64,17 +62,17 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onNext(User user) {
-                        launchCameraActivity(user);
+                        startListeningAndInteract(user);
                     }
                 });
     }
 
-    private void launchCameraActivity(User user) {
+    private void startListeningAndInteract(User user) {
         Toast.makeText(MainActivity.this,
                 R.string.successfully_logged_in, Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(MainActivity.this, CameraActivity.class);
-        intent.putExtra(USER, user);
-        startActivity(intent);
+
+        loadWebView();
+        loadDevices(mUser);
     }
 
     private void loadUserInfo() {
@@ -93,7 +91,7 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onNext(User user) {
-                        launchCameraActivity(user);
+                        startListeningAndInteract(user);
                     }
                 });
     }
@@ -114,14 +112,7 @@ public class MainActivity extends Activity {
     Subscription mLightDeviceSubscription;
     User mUser;
 
-
-    @AfterViews
     public void loadWebView() {
-        Intent intent = getIntent();
-        mUser = intent.getParcelableExtra(MainActivity.USER);
-
-        loadDevices(mUser);
-
         webView.loadUrl("http://192.168.43.1:8080/browserfs.html");
         webView.setInitialScale(100);
         webView.setBackgroundColor(Color.BLACK);
@@ -153,7 +144,7 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(CameraActivity.this, R.string.something_went_wrong,
+                        Toast.makeText(MainActivity.this, R.string.something_went_wrong,
                                 Toast.LENGTH_SHORT).show();
                     }
 
@@ -183,11 +174,12 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(CameraActivity.this, R.string.something_went_wrong,
+                        Toast.makeText(MainActivity.this, R.string.something_went_wrong,
                                 Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
+                    @UiThread
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("temperature")) {
                             temperature.setText(reading.value + "˚ C");
@@ -211,11 +203,12 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(CameraActivity.this, R.string.something_went_wrong,
+                        Toast.makeText(MainActivity.this, R.string.something_went_wrong,
                                 Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
+                    @UiThread
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("luminosity")) {
                             lux.setText(reading.value + "cd");
