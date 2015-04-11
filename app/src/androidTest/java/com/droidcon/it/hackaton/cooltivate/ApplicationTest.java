@@ -1,4 +1,4 @@
-package cooltivate.hackathon.it.droidcon.com.cooltivate;
+package com.droidcon.it.hackaton.cooltivate;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
