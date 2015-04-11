@@ -4,6 +4,13 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
+
+import io.relayr.RelayrSdk;
+import io.relayr.model.User;
+import io.relayr.sensors.RelayrSdkInitializer;
+import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -11,7 +18,35 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        RelayrSdkInitializer.initSdk(this);
         setContentView(R.layout.activity_main);
+
+        if (!RelayrSdk.isUserLoggedIn()) {
+            logIn();
+        }
+    }
+
+    private void logIn() {
+        RelayrSdk.logIn(this)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<User>() {
+                    @Override
+                    public void onCompleted() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(MainActivity.this,
+                                R.string.unsuccessfully_logged_in, Toast.LENGTH_SHORT).show();
+                    }
+
+
+                    @Override
+                    public void onNext(User user) {
+                        Toast.makeText(MainActivity.this,
+                                R.string.unsuccessfully_logged_in, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     @Override
