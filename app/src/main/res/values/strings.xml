@@ -3,4 +3,9 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="action_log_in">Log in</string>
+    <string name="action_log_out">Log out</string>
+    <string name="successfully_logged_in">You were successfully logged in!</string>
+    <string name="successfully_logged_out">You were successfully logged out!</string>
+    <string name="unsuccessfully_logged_in">There was a problem in the log in.</string>
 </resources>
