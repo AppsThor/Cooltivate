@@ -225,7 +225,7 @@ public class MainActivity extends Activity {
                             temperature.setValue(aFloat.intValue());
                         } else if (reading.meaning.equals("humidity")) {
                             Float aFloat = Float.valueOf(reading.value.toString());
-                            humidity.setText(String.format("%.1f", aFloat) + "%");
+                            humidity.setText(aFloat.intValue() + "%");
                             humidity.setValue(aFloat.intValue());
                         }
                     }
@@ -253,8 +253,8 @@ public class MainActivity extends Activity {
                     @UiThread
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("luminosity")) {
-                            Float floatPercentLum = Float.parseFloat(reading.value.toString()) * 100 / 4096;
-                            lux.setText(String.format("%.1f", floatPercentLum)+ "%");
+                            Float floatPercentLum = Float.parseFloat(reading.value.toString()) * 100 / 2048;
+                            lux.setText(floatPercentLum.intValue()+ "%");
                             lux.setValue(floatPercentLum.intValue());
                         }
                     }
