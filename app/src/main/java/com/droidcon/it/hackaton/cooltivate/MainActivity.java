@@ -15,6 +15,7 @@ import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.rest.RestService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,8 @@ import rx.schedulers.Schedulers;
 public class MainActivity extends Activity {
 
 
+    @RestService
+    EdisonRestClient restClient;
     @ViewById
     WebView webView;
     @ViewById
@@ -149,6 +152,7 @@ public class MainActivity extends Activity {
                     }
                 });
     }
+
 
 
 
