@@ -6,12 +6,13 @@ import android.graphics.Color;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebView;
-import android.widget.TextView;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.github.kratorius.circleprogress.CircleProgressView;
 
 import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
@@ -55,6 +56,16 @@ public class MainActivity extends Activity {
     CircleProgressView humidity;
     @ViewById
     CircleProgressView lux;
+    @ViewById
+    ImageView imageFan;
+    @ViewById
+    ImageView imageIrrigation;
+    @ViewById
+    ImageView imageBulb;
+
+    Status fanStatus;
+    Status lightStatus;
+    Status irrigationStatus;
 
     TransmitterDevice mDevice;
     Subscription mTemperatureDeviceSubscription;
@@ -63,8 +74,7 @@ public class MainActivity extends Activity {
     private PulseGestureHandler pulseBlowHandler;
     private PulseGestureHandler pulseShakeHandler;
     private PulseGestureHandler pulseProximityHandler;
-    public static final Integer MAX_LIGHT_VALUE = 10;
-    private Integer lightValue=0;
+    public static final Integer MAX_LIGHT_VALUE = 7;
 
     @AfterViews
     void onCreate() {
@@ -72,6 +82,8 @@ public class MainActivity extends Activity {
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         Resources res = getResources();
+
+        setActuatorsStatus();
 
         initializeBlowHandler(res, userInfoTrackingDetail);
         initializeShakeHandler(res, userInfoTrackingDetail);
@@ -82,6 +94,79 @@ public class MainActivity extends Activity {
         } else {
             logIn();
         }
+    }
+
+    @UiThread
+    protected void updateActuatorsUI() {
+        updateFanUI();
+        updateLightUI();
+        updateIrrigationUI();
+    }
+
+    @UiThread
+    protected void updateIrrigationUI() {
+        if (irrigationStatus != null){
+            if (irrigationStatus.getStatus() == 1){
+                imageIrrigation.setImageResource(R.mipmap.plumb_on);
+            } else {
+                imageIrrigation.setImageResource(R.mipmap.plumb_off);
+            }
+        }
+
+    }
+
+    @UiThread
+    protected void updateLightUI() {
+
+        if (lightStatus != null){
+        switch (lightStatus.getStatus()) {
+            case 0:
+                imageBulb.setImageResource(R.mipmap.bulb0);
+                break;
+            case 1:
+                imageBulb.setImageResource(R.mipmap.bulb1);
+                break;
+            case 2:
+                imageBulb.setImageResource(R.mipmap.bulb2);
+                break;
+            case 3:
+                imageBulb.setImageResource(R.mipmap.bulb3);
+                break;
+            case 4:
+                imageBulb.setImageResource(R.mipmap.bulb4);
+                break;
+            case 5:
+                imageBulb.setImageResource(R.mipmap.bulb5);
+                break;
+            case 6:
+                imageBulb.setImageResource(R.mipmap.bulb6);
+                break;
+            case 7:
+                imageBulb.setImageResource(R.mipmap.bulb7);
+                break;
+        }
+        }
+
+    }
+
+
+    @UiThread
+    protected void updateFanUI() {
+        if (fanStatus != null){
+            if (fanStatus.getStatus() == 1){
+                imageFan.setImageResource(R.mipmap.fan_on);
+            } else {
+                imageFan.setImageResource(R.mipmap.fan_off);
+            }
+        }
+    }
+
+    @Background
+     protected void setActuatorsStatus() {
+        fanStatus = restClient.getFanStatus();
+        lightStatus = restClient.getLightStatus();
+        irrigationStatus = restClient.getIrrigationStatus();
+        updateActuatorsUI();
     }
 
 
@@ -157,9 +242,9 @@ public class MainActivity extends Activity {
 
 
     public void loadWebView() {
-        webView.loadUrl("http://192.168.43.1:8080/browserfs.html");
+        webView.loadUrl("http://192.168.43.225:8080/browserfs.html");
         webView.setInitialScale(100);
-        webView.setBackgroundColor(Color.BLACK);
+        webView.setBackgroundColor(Color.GREEN);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         webView.setVerticalScrollbarOverlay(false);
     }
@@ -258,8 +343,15 @@ public class MainActivity extends Activity {
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("luminosity")) {
                             Float floatPercentLum = Float.parseFloat(reading.value.toString()) * 100 / 2048;
-                            lux.setText(floatPercentLum.intValue()+ "%");
-                            lux.setValue(floatPercentLum.intValue());
+                            int intValue = floatPercentLum.intValue();
+                            if (intValue > 100){
+                                lux.setValue(100);
+                                lux.setText(100 + "%");
+                            } else {
+                                lux.setText(intValue + "%");
+                                lux.setValue(intValue);
+                            }
+
                         }
                     }
                 });
@@ -295,39 +387,90 @@ public class MainActivity extends Activity {
     }
 
 
+
+
+
+
+
     private class BlowListener implements PulseGestureListener {
 
         @Override
         public void onEvent(PulseGestureEvent event) {
-            if(event.getType() == PulseGestureEvent.PULSE_START_EVENT_TYPE) {
-//                Log.i("pulsestart", "pulsestart");
+            if(event.getType() == PulseGestureEvent.PULSE_STOP_EVENT_TYPE) {
+                changeFanStatus();
             }
         }
     }
+
+    @Background
+    protected void changeFanStatus() {
+        fanStatus = restClient.changeFanStatus((fanStatus.getStatus() == 1) ? 0 : 1);
+        updateFanUI();
+    }
+
+
+
+
+
+
 
     private class ShakeListener implements PulseGestureListener {
 
         @Override
         public void onEvent(PulseGestureEvent event) {
             if(event.getType() == PulseGestureEvent.PULSE_HOLD_EVENT_TYPE) {
-//                Log.i("pulsestop", "pulstop");
+                changeIrrigationStatus();
             }
         }
     }
+
+    @Background
+    protected void changeIrrigationStatus() {
+        irrigationStatus = restClient.changeIrrigationStatus((irrigationStatus.getStatus() == 1)? 0 : 1);
+        updateIrrigationUI();
+    }
+
+
+
+
+
 
     private class ProximityListener implements PulseGestureListener {
 
         @Override
         public void onEvent(PulseGestureEvent event) {
             if(event.getType() == PulseGestureEvent.PULSE_HOLD_EVENT_TYPE) {
-                lightValue++;
-                if(lightValue > MAX_LIGHT_VALUE) {
-                    lightValue = 0;
-                }
-//                Log.i("lightvalue", "lightValue: " + lightValue);
+                incrementLightValue();
             }
+
+            if (event.getType() == PulseGestureEvent.PULSE_STOP_EVENT_TYPE){
+                changeLightStatus();
+            }
+
+
         }
     }
+
+    @Background
+    protected void incrementLightValue() {
+        int lightValue = lightStatus.getStatus();
+        lightValue++;
+        if(lightValue > MAX_LIGHT_VALUE) {
+            lightValue = 0;
+        }
+        lightStatus.setStatus(lightValue);
+        updateLightUI();
+
+    }
+
+    @Background
+    protected void changeLightStatus() {
+        lightStatus = restClient.changeLightStatus(lightStatus.getStatus());
+        updateLightUI();
+    }
+
+
+
 
 
 }

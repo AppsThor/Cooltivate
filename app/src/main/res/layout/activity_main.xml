@@ -13,6 +13,10 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"></WebView>
 
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"></FrameLayout>
+
     <LinearLayout
         android:layout_alignParentBottom="true"
         android:layout_width="90dp"
@@ -32,8 +36,7 @@
                 android:layout_gravity="center"
                 circle:circleProgressColor="#ccff90"
                 circle:circleProgressTextColor="#ccff90"
-                circle:circleProgressThickness="6dp"
-                />
+                circle:circleProgressThickness="6dp" />
 
             <ImageView
                 android:layout_width="25dp"
@@ -57,8 +60,7 @@
                 android:layout_gravity="center"
                 circle:circleProgressColor="#ccff90"
                 circle:circleProgressTextColor="#ccff90"
-                circle:circleProgressThickness="6dp"
-                />
+                circle:circleProgressThickness="6dp" />
 
             <ImageView
                 android:layout_width="25dp"
@@ -82,8 +84,7 @@
                 android:layout_gravity="center"
                 circle:circleProgressColor="#ccff90"
                 circle:circleProgressTextColor="#ccff90"
-                circle:circleProgressThickness="6dp"
-                 />
+                circle:circleProgressThickness="6dp" />
 
             <ImageView
                 android:layout_width="25dp"
@@ -112,7 +113,7 @@
             <ImageView
                 android:layout_width="70dp"
                 android:layout_height="70dp"
-                android:id="@+id/imageView4"
+                android:id="@+id/imageBulb"
                 android:layout_gravity="center"
                 android:src="@mipmap/bulb0" />
         </FrameLayout>
@@ -125,7 +126,7 @@
             <ImageView
                 android:layout_width="70dp"
                 android:layout_height="70dp"
-                android:id="@+id/imageView5"
+                android:id="@+id/imageIrrigation"
                 android:layout_gravity="center"
                 android:src="@mipmap/plumb_off" />
         </FrameLayout>
@@ -138,7 +139,7 @@
             <ImageView
                 android:layout_width="70dp"
                 android:layout_height="70dp"
-                android:id="@+id/imageView6"
+                android:id="@+id/imageFan"
                 android:layout_gravity="center"
                 android:src="@mipmap/fan_off" />
         </FrameLayout>
