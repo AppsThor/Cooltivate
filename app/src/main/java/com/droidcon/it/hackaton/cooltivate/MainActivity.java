@@ -9,6 +9,8 @@ import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.kratorius.circleprogress.CircleProgressView;
+
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
@@ -45,11 +47,11 @@ public class MainActivity extends Activity {
     @ViewById
     WebView webView;
     @ViewById
-    TextView temperature;
+    CircleProgressView temperature;
     @ViewById
-    TextView humidity;
+    CircleProgressView humidity;
     @ViewById
-    TextView lux;
+    CircleProgressView lux;
 
     TransmitterDevice mDevice;
     Subscription mTemperatureDeviceSubscription;
@@ -218,9 +220,13 @@ public class MainActivity extends Activity {
                     @UiThread
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("temperature")) {
-                            temperature.setText(reading.value + "˚ C");
+                            Float aFloat = Float.valueOf(reading.value.toString());
+                            temperature.setText(String.format("%.1f", aFloat)+"°");
+                            temperature.setValue(aFloat.intValue());
                         } else if (reading.meaning.equals("humidity")) {
-                            humidity.setText(reading.value + "%");
+                            Float aFloat = Float.valueOf(reading.value.toString());
+                            humidity.setText(String.format("%.1f", aFloat) + "%");
+                            humidity.setValue(aFloat.intValue());
                         }
                     }
                 });
@@ -248,7 +254,8 @@ public class MainActivity extends Activity {
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("luminosity")) {
                             Float floatPercentLum = Float.parseFloat(reading.value.toString()) * 100 / 4096;
-                            lux.setText(floatPercentLum.intValue()+ " %");
+                            lux.setText(String.format("%.1f", floatPercentLum)+ "%");
+                            lux.setValue(floatPercentLum.intValue());
                         }
                     }
                 });
