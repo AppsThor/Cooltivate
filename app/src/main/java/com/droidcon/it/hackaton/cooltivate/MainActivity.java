@@ -1,8 +1,10 @@
 package com.droidcon.it.hackaton.cooltivate;
 
 import android.app.Activity;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +24,12 @@ import io.relayr.model.Transmitter;
 import io.relayr.model.TransmitterDevice;
 import io.relayr.model.User;
 import io.relayr.sensors.RelayrSdkInitializer;
+import io.snapback.sdk.gesture.sequence.adapter.BlowSensorAdapter;
+import io.snapback.sdk.gesture.sequence.adapter.ProximitySensorAdapter;
+import io.snapback.sdk.gesture.sequence.adapter.ShakeSensorAdapter;
+import io.snapback.sdk.gesture.sequence.pulse.PulseGestureEvent;
+import io.snapback.sdk.gesture.sequence.pulse.PulseGestureHandler;
+import io.snapback.sdk.gesture.sequence.pulse.PulseGestureListener;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
@@ -33,14 +41,59 @@ import rx.schedulers.Schedulers;
 @EActivity(R.layout.activity_main)
 public class MainActivity extends Activity {
 
+
+    @ViewById
+    WebView webView;
+    @ViewById
+    TextView temperature;
+    @ViewById
+    TextView humidity;
+    @ViewById
+    TextView lux;
+
+    TransmitterDevice mDevice;
+    Subscription mTemperatureDeviceSubscription;
+    Subscription mLightDeviceSubscription;
+
+    private PulseGestureHandler pulseBlowHandler;
+    private PulseGestureHandler pulseShakeHandler;
+    private PulseGestureHandler pulseProximityHandler;
+    public static final Integer MAX_LIGHT_VALUE = 10;
+    private Integer lightValue=0;
+
     @AfterViews
     void onCreate() {
+        String userInfoTrackingDetail = "samuele.veneruso@gmail.com";
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        Resources res = getResources();
+
+        initializeBlowHandler(res, userInfoTrackingDetail);
+        initializeShakeHandler(res, userInfoTrackingDetail);
+        initializeProximityHandler(res, userInfoTrackingDetail);
         RelayrSdkInitializer.initSdk(this);
         if (RelayrSdk.isUserLoggedIn()) {
             loadUserInfo();
         } else {
             logIn();
         }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        pulseBlowHandler.start();
+        pulseShakeHandler.start();
+        pulseProximityHandler.start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        pulseBlowHandler.stop();
+        pulseShakeHandler.stop();
+        pulseProximityHandler.stop();
     }
 
 
@@ -96,19 +149,6 @@ public class MainActivity extends Activity {
     }
 
 
-    @ViewById
-    WebView webView;
-    @ViewById
-    TextView temperature;
-    @ViewById
-    TextView humidity;
-    @ViewById
-    TextView lux;
-
-    TransmitterDevice mDevice;
-//    Subscription mUserInfoSubscription;
-    Subscription mTemperatureDeviceSubscription;
-    Subscription mLightDeviceSubscription;
 
     public void loadWebView() {
         webView.loadUrl("http://192.168.43.1:8080/browserfs.html");
@@ -125,8 +165,6 @@ public class MainActivity extends Activity {
                 .flatMap(new Func1<List<Transmitter>, Observable<List<TransmitterDevice>>>() {
                     @Override
                     public Observable<List<TransmitterDevice>> call(List<Transmitter> transmitters) {
-                        // This is a naive implementation. Users may own many WunderBars or other
-                        // kinds of transmitter.
                         if (transmitters.isEmpty())
                             return Observable.from(new ArrayList<List<TransmitterDevice>>());
                         return RelayrSdk.getRelayrApi().getTransmitterDevices(transmitters.get(0).id);
@@ -209,41 +247,76 @@ public class MainActivity extends Activity {
                     @UiThread
                     public void onNext(Reading reading) {
                         if (reading.meaning.equals("luminosity")) {
-                            lux.setText(reading.value + "cd");
+                            Float floatPercentLum = Float.parseFloat(reading.value.toString()) * 100 / 4096;
+                            lux.setText(floatPercentLum.intValue()+ " %");
                         }
                     }
                 });
     }
 
-//    private void unSubscribeToUpdates() {
-//        if (isSubscribed(mUserInfoSubscription)) {
-//            mUserInfoSubscription.unsubscribe();
-//        }
-//        if (isSubscribed(mTemperatureDeviceSubscription)) {
-//            mTemperatureDeviceSubscription.unsubscribe();
-//        }
-//        if (isSubscribed(mLightDeviceSubscription)) {
-//            mLightDeviceSubscription.unsubscribe();
-//        }
-////        if (isSubscribed(mWebSocketSubscription)) {
-////            mWebSocketSubscription.unsubscribe();
-////            RelayrSdk.getWebSocketClient().unSubscribe(mDevice.id);
-////        }
-//    }
-//
-//    private static boolean isSubscribed(Subscription subscription) {
-//        return subscription != null && !subscription.isUnsubscribed();
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        logOut();
-//        super.onPause();
-//    }
 
-//    private void logOut() {
-//        unSubscribeToUpdates();
-//        RelayrSdk.logOut();
-//        Toast.makeText(this, R.string.successfully_logged_out, Toast.LENGTH_SHORT).show();
-//    }
+
+
+
+
+    private void initializeProximityHandler(Resources res, String userInfoTrackingDetail) {
+        pulseProximityHandler = new PulseGestureHandler(this);
+        pulseProximityHandler.setUsageTrackingDetails(userInfoTrackingDetail, res.getString(R.string.app_name));
+        ProximitySensorAdapter proximitySensorAdapter = new ProximitySensorAdapter(pulseProximityHandler, this);
+        pulseProximityHandler.setSensorAdapters(proximitySensorAdapter);
+        pulseProximityHandler.register(new ProximityListener());
+    }
+
+    private void initializeShakeHandler(Resources res, String userInfoTrackingDetail) {
+        pulseShakeHandler = new PulseGestureHandler(this);
+        pulseShakeHandler.setUsageTrackingDetails(userInfoTrackingDetail, res.getString(R.string.app_name));
+        ShakeSensorAdapter shakeSensorAdapter = new ShakeSensorAdapter(pulseShakeHandler, this);
+        pulseShakeHandler.setSensorAdapters(shakeSensorAdapter);
+        pulseShakeHandler.register(new ShakeListener());
+    }
+
+    private void initializeBlowHandler(Resources res, String userInfoTrackingDetail) {
+        pulseBlowHandler = new PulseGestureHandler(this);
+        pulseBlowHandler.setUsageTrackingDetails(userInfoTrackingDetail, res.getString(R.string.app_name));
+        BlowSensorAdapter blowSensorAdapter = new BlowSensorAdapter(pulseBlowHandler, this);
+        pulseBlowHandler.setSensorAdapters(blowSensorAdapter);
+        pulseBlowHandler.register(new BlowListener());
+    }
+
+
+    private class BlowListener implements PulseGestureListener {
+
+        @Override
+        public void onEvent(PulseGestureEvent event) {
+            if(event.getType() == PulseGestureEvent.PULSE_START_EVENT_TYPE) {
+//                Log.i("pulsestart", "pulsestart");
+            }
+        }
+    }
+
+    private class ShakeListener implements PulseGestureListener {
+
+        @Override
+        public void onEvent(PulseGestureEvent event) {
+            if(event.getType() == PulseGestureEvent.PULSE_HOLD_EVENT_TYPE) {
+//                Log.i("pulsestop", "pulstop");
+            }
+        }
+    }
+
+    private class ProximityListener implements PulseGestureListener {
+
+        @Override
+        public void onEvent(PulseGestureEvent event) {
+            if(event.getType() == PulseGestureEvent.PULSE_HOLD_EVENT_TYPE) {
+                lightValue++;
+                if(lightValue > MAX_LIGHT_VALUE) {
+                    lightValue = 0;
+                }
+//                Log.i("lightvalue", "lightValue: " + lightValue);
+            }
+        }
+    }
+
+
 }
