@@ -25,16 +25,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1">
 
-            <!--<TextView-->
-                <!--android:layout_width="90dp"-->
-                <!--android:layout_height="90dp"-->
-                <!--android:textColor="#FFF"-->
-                <!--android:textAppearance="?android:attr/textAppearanceLarge"-->
-                <!--android:text="lux"-->
-                <!--android:id="@+id/lux"-->
-                <!--android:layout_gravity="center"-->
-                <!--android:gravity="center" />-->
-
             <com.github.kratorius.circleprogress.CircleProgressView
                 android:id="@+id/lux"
                 android:layout_width="80dp"
@@ -59,15 +49,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1">
 
-            <!--<TextView-->
-                <!--android:layout_width="80dp"-->
-                <!--android:layout_height="80dp"-->
-                <!--android:textAppearance="?android:attr/textAppearanceLarge"-->
-                <!--android:text="hum"-->
-                <!--android:textColor="#FFF"-->
-                <!--android:id="@+id/humidity"-->
-                <!--android:layout_gravity="center"-->
-                <!--android:gravity="center" />-->
 
             <com.github.kratorius.circleprogress.CircleProgressView
                 android:id="@+id/humidity"
@@ -115,6 +96,53 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="90dp"
+        android:layout_height="fill_parent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true">
+
+        <FrameLayout
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:id="@+id/imageView4"
+                android:layout_gravity="center"
+                android:src="@mipmap/bulb0" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:id="@+id/imageView5"
+                android:layout_gravity="center"
+                android:src="@mipmap/plumb_off" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:id="@+id/imageView6"
+                android:layout_gravity="center"
+                android:src="@mipmap/fan_off" />
+        </FrameLayout>
+    </LinearLayout>
 
 
 </RelativeLayout>
