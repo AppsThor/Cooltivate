@@ -418,7 +418,7 @@ public class MainActivity extends Activity {
 
         @Override
         public void onEvent(PulseGestureEvent event) {
-            if(event.getType() == PulseGestureEvent.PULSE_HOLD_EVENT_TYPE) {
+            if(event.getType() == PulseGestureEvent.PULSE_START_EVENT_TYPE) {
                 changeIrrigationStatus();
             }
         }
